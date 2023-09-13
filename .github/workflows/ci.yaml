@@ -1,0 +1,37 @@
+name: Java CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  prepare:
+    name: Install Extism Runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/libextism
+  java:
+    name: Java
+    runs-on: ${{ matrix.os }}
+    needs: prepare
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        version: [11, 17]
+        rust:
+          - stable
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - uses: ./.github/actions/extism
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '${{ matrix.version }}'
+      - name: Test Java
+        run: |
+          mvn --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn verify
