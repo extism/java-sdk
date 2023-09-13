@@ -26,6 +26,19 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+      - name: Download libextism.so
+        uses: actions/download-artifact@v2
+        with:
+          name: libextism-so-artifact
+      - name: Download libextism.h
+        uses: actions/download-artifact@v2
+        with:
+          name: libextism-h-artifact
+      - name: Move the files because download can't sudo
+        run: |
+          ls -lah ./
+          sudo mv libextism.so /usr/local/lib/
+          sudo mv extism.h /usr/local/include/
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
