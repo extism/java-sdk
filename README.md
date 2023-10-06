@@ -62,7 +62,8 @@ var manifest = new Manifest(List.of(UrlWasmSource.fromUrl(url)));
 var plugin = new Plugin(manifest, false, null);
 ```
 
-> **Note**: See [the Manifest docs](https://extism.github.io/ruby-sdk/Extism/Manifest.html) as it has a rich schema and a lot of options.
+> TODO link to javadoc
+> **Note**: See [the Manifest docs](https://example.com) as it has a rich schema and a lot of options.
 
 ### Calling A Plug-in's Exports
 
