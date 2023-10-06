@@ -4,8 +4,8 @@ Java SDK for the [Extism](https://extism.org/) WebAssembly Plugin-System.
 
 > **Note**: This is an early 1.0 release and is unstable until we hit 1.0 in December. If you are looking for a stable release consider the 0.x version in the [Extism/extism](https://github.com/extism/extism/tree/main/java) repo.
 
-[![javadoc](https://javadoc.io/badge2/org.extism.sdk/extism/javadoc.svg)](https://javadoc.io/doc/org.extism.sdk/extism)
 [![maven](https://img.shields.io/maven-central/v/org.extism.sdk/extism)](https://search.maven.org/artifact/org.extism.sdk/extism)
+[![javadoc](https://javadoc.io/badge2/org.extism.sdk/extism/javadoc.svg)](https://javadoc.io/doc/org.extism.sdk/extism)
 
 ## Installation
 
@@ -65,12 +65,11 @@ var manifest = new Manifest(List.of(UrlWasmSource.fromUrl(url)));
 var plugin = new Plugin(manifest, false, null);
 ```
 
-> TODO link to javadoc
-> **Note**: See [the Manifest docs](https://example.com) as it has a rich schema and a lot of options.
+> **Note**: See [the Manifest docs](https://www.javadoc.io/doc/org.extism.sdk/extism/latest/org/extism/sdk/manifest/Manifest.html) as it has a rich schema and a lot of options.
 
 ### Calling A Plug-in's Exports
 
-This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such, it exposes one "export" function: `count_vowels`. We can call exports using [Plugin#call](https://example.com) TODO link to javadoc:
+This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such, it exposes one "export" function: `count_vowels`. We can call exports using [Plugin#call](https://www.javadoc.io/doc/org.extism.sdk/extism/latest/org/extism/sdk/Plugin.html#call(java.lang.String,byte[]))
 
 ```java
 var output = plugin.call("count_vowels", "Hello, World!");
@@ -189,8 +188,7 @@ HostFunction kvReadHostFn = new HostFunction<>(
 
 ```
 
-// TODO link to javadoc here
-> *Note*: In order to write host functions you should get familiar with the methods on the [ExtismCurrentPlugin](https://example.com) class.
+> *Note*: In order to write host functions you should get familiar with the methods on the [ExtismCurrentPlugin](https://www.javadoc.io/doc/org.extism.sdk/extism/latest/org/extism/sdk/ExtismCurrentPlugin.html) class.
 > The `plugin` parameter is an instance of this class.
 
 Now we just need to pass in these function references when creating the plugin:.
