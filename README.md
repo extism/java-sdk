@@ -95,17 +95,6 @@ System.out.println(output);
 
 These variables will persist until this plug-in is freed or you initialize a new one.
 
-
-### Host Functions
-
-Let's extend our count-vowels example a little bit: Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store!
-
-Wasm can't use our KV store on it's own. This is where [Host Functions](https://extism.org/docs/concepts/host-functions) come in.
-
-[Host functions](https://extism.org/docs/concepts/host-functions) allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed down and invoked from any language inside the plug-in.
-
-Let's load the manifest like usual but load up this `count_vowels_kvstore` plug-in:
-
 ### Configuration
 
 Plug-ins may optionally take a configuration object. This is a static way to configure the plug-in.
