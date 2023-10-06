@@ -4,6 +4,7 @@ import org.extism.sdk.ExtismException;
 import org.extism.sdk.support.Hashing;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -18,7 +19,6 @@ public class WasmSourceResolver {
     }
 
     public PathWasmSource resolve(String name, Path path) {
-
         Objects.requireNonNull(path, "path");
 
         var wasmFile = path.toFile();

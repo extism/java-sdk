@@ -33,6 +33,7 @@ public class Extism {
 
     /**
      * Invokes the named {@code function} from the {@link Manifest} with the given {@code input}.
+     * This is a convenience method. Prefer initializing and using a {@link Plugin} where possible.
      *
      * @param manifest the manifest containing the function
      * @param function the name of the function to call
