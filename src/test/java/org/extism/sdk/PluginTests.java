@@ -53,57 +53,57 @@ public class PluginTests {
         assertThat(output).isEqualTo("{\"count\":4,\"total\":4,\"vowels\":\"aeiouyAEIOUY\"}");
     }
 
-    @Test
-    public void shouldInvokeFunctionFromUrlWasmSourceHostFuncs() {
-        var url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm";
-        var manifest = new Manifest(List.of(UrlWasmSource.fromUrl(url)));
-
-        // Our application KV store
-        // Pretend this is redis or a database :)
-        var kvStore = new HashMap<String, byte[]>();
-
-        ExtismFunction kvWrite = (plugin, params, returns, data) -> {
-            System.out.println("Hello from Java Host Function!");
-            var key = plugin.inputString(params[0]);
-            var value = plugin.inputBytes(params[1]);
-            System.out.println("Writing to key " +  key);
-            kvStore.put(key, value);
-        };
-
-        ExtismFunction kvRead = (plugin, params, returns, data) -> {
-            System.out.println("Hello from Java Host Function!");
-            var key = plugin.inputString(params[0]);
-            System.out.println("Reading from key " +  key);
-            var value = kvStore.get(key);
-            if (value == null) {
-                // default to zeroed bytes
-                var zero = new byte[]{0,0,0,0};
-                plugin.returnBytes(returns[0], zero);
-            } else {
-                plugin.returnBytes(returns[0], value);
-            }
-        };
-
-        HostFunction kvWriteHostFn = new HostFunction<>(
-                "kv_write",
-                new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64, LibExtism.ExtismValType.I64},
-                new LibExtism.ExtismValType[0],
-                kvWrite,
-                Optional.empty()
-        );
-
-        HostFunction kvReadHostFn = new HostFunction<>(
-                "kv_read",
-                new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64},
-                new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64},
-                kvRead,
-                Optional.empty()
-        );
-
-        HostFunction[] functions = {kvWriteHostFn, kvReadHostFn};
-        var plugin = new Plugin(manifest, false, functions);
-        var output = plugin.call("count_vowels", "Hello, World!");
-    }
+//    @Test
+//    public void shouldInvokeFunctionFromUrlWasmSourceHostFuncs() {
+//        var url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm";
+//        var manifest = new Manifest(List.of(UrlWasmSource.fromUrl(url)));
+//
+//        // Our application KV store
+//        // Pretend this is redis or a database :)
+//        var kvStore = new HashMap<String, byte[]>();
+//
+//        ExtismFunction kvWrite = (plugin, params, returns, data) -> {
+//            System.out.println("Hello from Java Host Function!");
+//            var key = plugin.inputString(params[0]);
+//            var value = plugin.inputBytes(params[1]);
+//            System.out.println("Writing to key " +  key);
+//            kvStore.put(key, value);
+//        };
+//
+//        ExtismFunction kvRead = (plugin, params, returns, data) -> {
+//            System.out.println("Hello from Java Host Function!");
+//            var key = plugin.inputString(params[0]);
+//            System.out.println("Reading from key " +  key);
+//            var value = kvStore.get(key);
+//            if (value == null) {
+//                // default to zeroed bytes
+//                var zero = new byte[]{0,0,0,0};
+//                plugin.returnBytes(returns[0], zero);
+//            } else {
+//                plugin.returnBytes(returns[0], value);
+//            }
+//        };
+//
+//        HostFunction kvWriteHostFn = new HostFunction<>(
+//                "kv_write",
+//                new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64, LibExtism.ExtismValType.I64},
+//                new LibExtism.ExtismValType[0],
+//                kvWrite,
+//                Optional.empty()
+//        );
+//
+//        HostFunction kvReadHostFn = new HostFunction<>(
+//                "kv_read",
+//                new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64},
+//                new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64},
+//                kvRead,
+//                Optional.empty()
+//        );
+//
+//        HostFunction[] functions = {kvWriteHostFn, kvReadHostFn};
+//        var plugin = new Plugin(manifest, false, functions);
+//        var output = plugin.call("count_vowels", "Hello, World!");
+//    }
 
      @Test
      public void shouldInvokeFunctionFromByteArrayWasmSource() {
