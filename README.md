@@ -4,6 +4,9 @@ Java SDK for the [Extism](https://extism.org/) WebAssembly Plugin-System.
 
 > **Note**: This is an early 1.0 release and is unstable until we hit 1.0 in December. If you are looking for a stable release consider the 0.x version in the [Extism/extism](https://github.com/extism/extism/tree/main/java) repo.
 
+[![javadoc](https://javadoc.io/badge2/org.extism.sdk/extism/javadoc.svg)](https://javadoc.io/doc/org.extism.sdk/extism)
+[![maven](https://img.shields.io/maven-central/v/org.extism.sdk/extism)](https://search.maven.org/artifact/org.extism.sdk/extism)
+
 ## Installation
 
 ### Install the Extism Runtime Dependency
