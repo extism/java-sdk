@@ -222,7 +222,7 @@ public class PluginTests {
                 helloWorldFunction,
                 Optional.empty()
         )
-                .withNamespace("env");
+                .withNamespace("extism:host/env");
 
         HostFunction g = new HostFunction<>(
                 "hello_world",
