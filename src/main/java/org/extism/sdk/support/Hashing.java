@@ -2,7 +2,11 @@ package org.extism.sdk.support;
 
 import java.security.MessageDigest;
 
-public class Hashing {
+public final class Hashing {
+
+    private Hashing() {
+        // prevent instantiation
+    }
 
     public static String sha256HexDigest(byte[] input) {
         try {

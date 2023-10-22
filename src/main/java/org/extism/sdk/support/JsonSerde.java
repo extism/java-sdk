@@ -13,7 +13,11 @@ import org.extism.sdk.manifest.Manifest;
 import java.io.IOException;
 import java.util.Base64;
 
-public class JsonSerde {
+public final class JsonSerde {
+
+    private JsonSerde() {
+
+    }
 
     private static final Gson GSON;
 
