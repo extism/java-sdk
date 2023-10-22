@@ -46,6 +46,9 @@ public class Manifest {
     @SerializedName("config")
     private final Map<String, String> config;
 
+    /**
+     * Creates a new Manifest with an empty list of wasm sources.
+     */
     public Manifest() {
         this(new ArrayList<>(), null, null, null, null);
     }
@@ -78,8 +81,63 @@ public class Manifest {
         this.allowedPaths = allowedPaths;
     }
 
-    public void addSource(WasmSource source) {
-        this.sources.add(source);
+    /**
+     * Returns a new {@link Manifest} with the {@link WasmSource}.
+     * @param source
+     * @return
+     */
+    public Manifest withSource(WasmSource source) {
+        return new Manifest(List.of(source), memoryOptions, config, allowedHosts, allowedPaths);
+    }
+
+    /**
+     * Returns a new {@link Manifest} with the {@link WasmSource} added to the end of the current wasm sources.
+     * @param source
+     * @return
+     */
+    public Manifest withAdditionalSource(WasmSource source) {
+
+        var sources = new ArrayList<>(this.sources);
+        sources.add(source);
+
+        return new Manifest(sources, memoryOptions, config, allowedHosts, allowedPaths);
+    }
+
+    /**
+     * Returns a new {@link Manifest} with the given {@link MemoryOptions}.
+     * @param memoryOptions
+     * @return
+     */
+    public Manifest withMemoryOptions(MemoryOptions memoryOptions) {
+        return new Manifest(sources, memoryOptions, config, allowedHosts, allowedPaths);
+    }
+
+    /**
+     * Returns a new {@link Manifest} with the given config.
+     * @param config
+     * @return
+     */
+    public Manifest withConfig(Map<String, String> config) {
+        return new Manifest(sources, memoryOptions, config, allowedHosts, allowedPaths);
+    }
+
+    /**
+     * Returns a new {@link Manifest} with the given allowed hosts.
+     * @param allowedHosts
+     * @return
+     */
+    public Manifest withAllowedHosts(List<String> allowedHosts) {
+        return new Manifest(sources, memoryOptions, config, allowedHosts, allowedPaths);
+    }
+
+    /**
+     * Returns a new {@link Manifest} with the given allowed paths.
+     *
+     * @param allowedPaths
+     * @return
+     */
+    public Manifest withAllowedPaths(Map<String, String> allowedPaths) {
+        return new Manifest(sources, memoryOptions, config, allowedHosts, allowedPaths);
     }
 
     public List<WasmSource> getSources() {

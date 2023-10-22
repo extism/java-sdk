@@ -58,6 +58,14 @@ public class Plugin implements AutoCloseable {
         this(serialize(manifest), withWASI, functions);
     }
 
+    public Plugin(Manifest manifest, boolean withWASI) {
+        this(manifest, withWASI, null);
+    }
+
+    public Plugin(Manifest manifest) {
+        this(manifest, false);
+    }
+
 
     private static byte[] serialize(Manifest manifest) {
         Objects.requireNonNull(manifest, "manifest");

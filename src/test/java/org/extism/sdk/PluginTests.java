@@ -6,7 +6,6 @@ import org.extism.sdk.wasm.UrlWasmSource;
 import org.extism.sdk.wasm.WasmSourceResolver;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +22,7 @@ public class PluginTests {
 
     @Test
     public void shouldInvokeFunctionWithMemoryOptions() {
-        var manifest = new Manifest(List.of(CODE.pathWasmSource()), new MemoryOptions(0));
+        var manifest = new Manifest(CODE.pathWasmSource()).withMemoryOptions(new MemoryOptions(0));
         assertThrows(ExtismException.class, () -> {
             Extism.invokeFunction(manifest, "count_vowels", "Hello World");
         });
@@ -33,7 +32,7 @@ public class PluginTests {
     public void shouldInvokeFunctionWithConfig() {
         //FIXME check if config options are available in wasm call
         var config = Map.of("key1", "value1");
-        var manifest = new Manifest(List.of(CODE.pathWasmSource()), null, config);
+        var manifest = new Manifest(CODE.pathWasmSource()).withConfig(config);
         var output = Extism.invokeFunction(manifest, "count_vowels", "Hello World");
         assertThat(output).isEqualTo("{\"count\": 3}");
     }
@@ -49,9 +48,9 @@ public class PluginTests {
     public void shouldInvokeFunctionFromUrlWasmSource() {
         var url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm";
         var config = Map.of("vowels", "aeiouyAEIOUY");
-        var manifest = new Manifest(List.of(UrlWasmSource.fromUrl(url)), null, config);
+        var manifest = new Manifest(UrlWasmSource.fromUrl(url)).withConfig(config);
 
-        try (var plugin = new Plugin(manifest, false, null)) {
+        try (var plugin = new Plugin(manifest)) {
             String output = plugin.call("count_vowels", "Yellow, World!");
             assertThat(output).isEqualTo("{\"count\":4,\"total\":4,\"vowels\":\"aeiouyAEIOUY\"}");
         }
@@ -134,7 +133,7 @@ public class PluginTests {
         var functionName = "count_vowels";
         var input = "Hello World";
 
-        try (var plugin = new Plugin(manifest, false, null)) {
+        try (var plugin = new Plugin(manifest)) {
             var output = plugin.call(functionName, input);
             assertThat(output).isEqualTo("{\"count\": 3}");
         }
@@ -146,7 +145,7 @@ public class PluginTests {
         var functionName = "count_vowels";
         var input = "Hello World";
 
-        try (var plugin = new Plugin(manifest, false, null)) {
+        try (var plugin = new Plugin(manifest)) {
             var output = plugin.call(functionName, input);
             assertThat(output).isEqualTo("{\"count\": 3}");
 
@@ -251,7 +250,7 @@ public class PluginTests {
         Manifest manifest = new Manifest(CODE.pathWasmFunctionsSource());
         String functionName = "count_vowels";
 
-        try (var plugin = new Plugin(manifest, true, null)) {
+        try (var plugin = new Plugin(manifest, true)) {
             plugin.call(functionName, "this is a test");
         } catch (ExtismException e) {
             assertThat(e.getMessage()).contains("unknown import: `env::hello_world` has not been defined");
