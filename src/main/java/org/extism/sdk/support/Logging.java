@@ -1,6 +1,5 @@
 package org.extism.sdk.support;
 
-import org.extism.sdk.Extism;
 import org.extism.sdk.ExtismException;
 import org.extism.sdk.LibExtism;
 

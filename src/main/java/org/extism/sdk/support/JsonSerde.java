@@ -16,7 +16,7 @@ import java.util.Base64;
 public final class JsonSerde {
 
     private JsonSerde() {
-
+        // prevent instantiation
     }
 
     private static final Gson GSON;
