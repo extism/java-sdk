@@ -1,7 +1,7 @@
 package org.extism.sdk;
 
 import com.sun.jna.Pointer;
-import com.sun.jna.PointerType;
+import org.extism.sdk.LibExtism.InternalExtismFunction;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -16,36 +16,24 @@ public class HostFunction<T extends HostUserData> {
 
     private final LibExtism.ExtismValType[] returns;
 
-    private final Optional<T> userData;
+    private final T userData;
 
-    public HostFunction(String name, LibExtism.ExtismValType[] params, LibExtism.ExtismValType[] returns, ExtismFunction<T> f, Optional<T> userData) {
+    public HostFunction(String name, LibExtism.ExtismValType[] params, LibExtism.ExtismValType[] returns, ExtismFunction<T> func) {
+        this(name, params, returns, func, null);
+    }
+
+    public HostFunction(String name, LibExtism.ExtismValType[] params, LibExtism.ExtismValType[] returns, ExtismFunction<T> func, T userData) {
 
         this.name = name;
         this.params = params;
         this.returns = returns;
         this.userData = userData;
-        var callback = (LibExtism.InternalExtismFunction) (
-                Pointer currentPluginPointer,
-                LibExtism.ExtismVal ins,
-                int nInputs,
-                LibExtism.ExtismVal outs,
-                int nOutputs,
-                Pointer data) -> {
 
-            var outputs = (LibExtism.ExtismVal[]) outs.toArray(nOutputs);
-            var inputs = (LibExtism.ExtismVal[]) ins.toArray(nInputs);
-            var currentPlugin = new ExtismCurrentPlugin(currentPluginPointer);
-
-            f.invoke(currentPlugin, inputs, outputs, userData);
-
-            for (LibExtism.ExtismVal output : outputs) {
-                convertOutput(output, output);
-            }
-        };
-
+        InternalExtismFunction callback = createCallbackFunction(func, userData);
         int[] inputTypeValues = Arrays.stream(this.params).mapToInt(r -> r.v).toArray();
         int[] outputTypeValues = Arrays.stream(this.returns).mapToInt(r -> r.v).toArray();
-        Pointer userDataPointer = userData.map(PointerType::getPointer).orElse(null);
+        Pointer userDataPointer = userData != null ? userData.getPointer() : null;
+
         this.pointer = LibExtism.INSTANCE.extism_function_new(
                 name,
                 inputTypeValues,
@@ -56,6 +44,26 @@ public class HostFunction<T extends HostUserData> {
                 userDataPointer,
                 null
         );
+    }
+
+    private InternalExtismFunction createCallbackFunction(ExtismFunction<T> func, T userData) {
+        return (Pointer currentPluginPointer,
+                LibExtism.ExtismVal ins,
+                int nInputs,
+                LibExtism.ExtismVal outs,
+                int nOutputs,
+                Pointer data) -> {
+
+            var outputs = (LibExtism.ExtismVal[]) outs.toArray(nOutputs);
+            var inputs = (LibExtism.ExtismVal[]) ins.toArray(nInputs);
+            var currentPlugin = new ExtismCurrentPlugin(currentPluginPointer);
+
+            func.invoke(currentPlugin, inputs, outputs, Optional.ofNullable(userData));
+
+            for (LibExtism.ExtismVal output : outputs) {
+                convertOutput(output, output);
+            }
+        };
     }
 
     void convertOutput(LibExtism.ExtismVal original, LibExtism.ExtismVal fromHostFunction) {
@@ -99,7 +107,7 @@ public class HostFunction<T extends HostUserData> {
     }
 
     public Optional<T> userData() {
-        return userData;
+        return Optional.ofNullable(userData);
     }
 
     public String name() {

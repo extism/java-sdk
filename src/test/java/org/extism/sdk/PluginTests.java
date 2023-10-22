@@ -187,7 +187,7 @@ public class PluginTests {
                 parametersTypes,
                 resultsTypes,
                 func,
-                Optional.of(new MyUserData("test", 2))
+                new MyUserData("test", 2)
         );
 
         var functions = new HostFunction[]{hostFunc};
@@ -220,16 +220,14 @@ public class PluginTests {
                 "hello_world",
                 parametersTypes,
                 resultsTypes,
-                func,
-                Optional.empty()
+                func
         ).withNamespace("env");
 
         var hostFuncTest = new HostFunction<>(
                 "hello_world",
                 parametersTypes,
                 resultsTypes,
-                func,
-                Optional.empty()
+                func
         ).withNamespace("test");
 
         var functions = new HostFunction[]{hostFuncEnv, hostFuncTest};
