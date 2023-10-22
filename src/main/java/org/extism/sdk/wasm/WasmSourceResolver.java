@@ -4,9 +4,10 @@ import org.extism.sdk.ExtismException;
 import org.extism.sdk.support.Hashing;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -30,6 +31,14 @@ public class WasmSourceResolver {
 
     public ByteArrayWasmSource resolve(String name, byte[] bytes) {
         return new ByteArrayWasmSource(name, bytes, hash(bytes));
+    }
+
+    public ByteArrayWasmSource resolve(byte[] bytes) {
+        return resolve("wasm@" + Arrays.hashCode(bytes), bytes);
+    }
+
+    public UrlWasmSource resolve(URI uri) {
+        return UrlWasmSource.fromUrl(uri);
     }
 
     protected String hash(Path wasmFile) {

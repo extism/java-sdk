@@ -48,7 +48,7 @@ public class PluginTests {
     public void shouldInvokeFunctionFromUrlWasmSource() {
         var url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm";
         var config = Map.of("vowels", "aeiouyAEIOUY");
-        var manifest = new Manifest(UrlWasmSource.fromUrl(url)).withConfig(config);
+        var manifest = Extism.manifestFromUrl(url).withConfig(config);
 
         try (var plugin = new Plugin(manifest)) {
             String output = plugin.call("count_vowels", "Yellow, World!");
@@ -127,8 +127,7 @@ public class PluginTests {
     @Test
     public void shouldAllowInvokeFunctionFromFileWasmSourceApiUsageExample() {
 
-        var wasmSourceResolver = new WasmSourceResolver();
-        var manifest = new Manifest(wasmSourceResolver.resolve(CODE.getWasmFilePath()));
+        var manifest = Extism.manifestFromPath(CODE.getWasmFilePath());
 
         var functionName = "count_vowels";
         var input = "Hello World";

@@ -1,5 +1,7 @@
 package org.extism.sdk.wasm;
 
+import java.net.URI;
+
 /**
  * WASM Source represented by a url.
  */
@@ -19,6 +21,10 @@ public class UrlWasmSource implements WasmSource {
      */
     public static UrlWasmSource fromUrl(String url) {
         return new UrlWasmSource(null, url, null);
+    }
+
+    public static UrlWasmSource fromUrl(URI uri) {
+        return fromUrl(uri.toString());
     }
 
     /**
