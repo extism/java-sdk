@@ -13,23 +13,36 @@ public interface LibExtism extends Library {
      */
     LibExtism INSTANCE = Native.load("extism", LibExtism.class);
 
+    /**
+     * Host function callback
+     */
     interface InternalExtismFunction extends Callback {
-        void invoke(
-                Pointer currentPlugin,
-                ExtismVal inputs,
-                int nInputs,
-                ExtismVal outputs,
-                int nOutputs,
-                Pointer data
-        );
+
+        /**
+         * Host function implementation.
+         *
+         * @param plugin
+         * @param inputs
+         * @param nInputs
+         * @param outputs
+         * @param nOutputs
+         * @param data
+         */
+        void invoke(Pointer plugin, ExtismVal inputs, int nInputs, ExtismVal outputs, int nOutputs, Pointer data);
     }
 
+    /**
+     * `Holds the type and value of a function argument/return.
+     */
     @Structure.FieldOrder({"t", "v"})
     class ExtismVal extends Structure {
         public int t;
         public ExtismValUnion v;
     }
 
+    /**
+     * A union type for host function argument/return values.
+     */
     class ExtismValUnion extends Union {
         public int i32;
         public long i64;
@@ -37,13 +50,44 @@ public interface LibExtism extends Library {
         public double f64;
     }
 
+    /**
+     * An enumeration of all possible value types in WebAssembly.
+     */
     enum ExtismValType {
+
+        /**
+         * Signed 32 bit integer.
+         */
         I32(0),
+
+        /**
+         * Signed 64 bit integer.
+         */
         I64(1),
+
+        /**
+         * Floating point 32 bit.
+         */
         F32(2),
+
+        /**
+         * Floating point 64 bit.
+         */
         F64(3),
+
+        /**
+         * A 128 bit number
+         */
         V128(4),
+
+        /**
+         * A reference to a Wasm function.
+         */
         FuncRef(5),
+
+        /**
+         * A reference to opaque data in the Wasm instance.
+         */
         ExternRef(6);
 
         public final int v;
@@ -53,6 +97,19 @@ public interface LibExtism extends Library {
         }
     }
 
+    /**
+     * Create a new host function.
+     *
+     * @param name function name
+     * @param inputs argument types
+     * @param nInputs number of argument types
+     * @param outputs return types
+     * @param nOutputs number of return types
+     * @param func the function to call
+     * @param userData a pointer that will be passed to the function when it's called
+     * @param freeUserData a callback to release the `user_data` value when the resulting ExtismFunction is freed.
+     * @return Returns a pointer to a new ExtismFunction or {@literal  null} if the {@code name} argument is invalid.
+     */
     Pointer extism_function_new(String name,
                                 int[] inputs,
                                 int nInputs,
@@ -162,8 +219,32 @@ public interface LibExtism extends Library {
      * @return {@literal true} if update was successful
      */
     boolean extism_plugin_config(Pointer pluginPointer, byte[] json, int jsonLength);
+
+    /**
+     * Get a handle for plugin cancellation
+     * @param pluginPointer
+     * @return a Pointer to a cancellation handle
+     */
     Pointer extism_plugin_cancel_handle(Pointer pluginPointer);
+
+    /**
+     * Cancel a running plugin.
+     * @param cancelHandle
+     * @return {@literal true} if cancellation was successful
+     */
     boolean extism_plugin_cancel(Pointer cancelHandle);
-    void extism_function_set_namespace(Pointer p, String name);
-    int strlen(Pointer s);
+
+    /**
+     * Set the namespace of an `ExtismFunction`
+     * @param pluginPointer
+     * @param namespace
+     */
+    void extism_function_set_namespace(Pointer pluginPointer, String namespace);
+
+    /**
+     * Helper function to get the length of a string represented by the pointer s.
+     * @param stringPointer
+     * @return
+     */
+    int strlen(Pointer stringPointer);
 }

@@ -1,6 +1,7 @@
 package org.extism.sdk;
 
 import com.sun.jna.Pointer;
+import org.extism.sdk.LibExtism.ExtismVal;
 import org.extism.sdk.LibExtism.InternalExtismFunction;
 
 import java.util.Arrays;
@@ -29,9 +30,9 @@ public class HostFunction<T extends HostUserData> {
         this.returns = returns;
         this.userData = userData;
 
-        InternalExtismFunction callback = createCallbackFunction(func, userData);
         int[] inputTypeValues = Arrays.stream(this.params).mapToInt(r -> r.v).toArray();
         int[] outputTypeValues = Arrays.stream(this.returns).mapToInt(r -> r.v).toArray();
+        InternalExtismFunction callback = createCallbackFunction(func, userData);
         Pointer userDataPointer = userData != null ? userData.getPointer() : null;
 
         this.pointer = LibExtism.INSTANCE.extism_function_new(
@@ -47,30 +48,25 @@ public class HostFunction<T extends HostUserData> {
     }
 
     private InternalExtismFunction createCallbackFunction(ExtismFunction<T> func, T userData) {
-        return (Pointer currentPluginPointer,
-                LibExtism.ExtismVal ins,
-                int nInputs,
-                LibExtism.ExtismVal outs,
-                int nOutputs,
-                Pointer data) -> {
+        return (Pointer pluginPointer, ExtismVal inputs, int nInputs, ExtismVal outputs, int nOutputs, Pointer data) -> {
 
-            var outputs = (LibExtism.ExtismVal[]) outs.toArray(nOutputs);
-            var inputs = (LibExtism.ExtismVal[]) ins.toArray(nInputs);
-            var currentPlugin = new ExtismCurrentPlugin(currentPluginPointer);
+            var outputValues = (ExtismVal[]) outputs.toArray(nOutputs);
+            var inputValues = (ExtismVal[]) inputs.toArray(nInputs);
+            var currentPlugin = new ExtismCurrentPlugin(pluginPointer);
 
-            func.invoke(currentPlugin, inputs, outputs, Optional.ofNullable(userData));
+            func.invoke(currentPlugin, inputValues, outputValues, Optional.ofNullable(userData));
 
-            for (LibExtism.ExtismVal output : outputs) {
+            for (ExtismVal output : outputValues) {
                 convertOutput(output, output);
             }
         };
     }
 
-    void convertOutput(LibExtism.ExtismVal original, LibExtism.ExtismVal fromHostFunction) {
-        if (fromHostFunction.t != original.t)
-            throw new ExtismException(String.format("Output type mismatch, got %d but expected %d", fromHostFunction.t, original.t));
+    void convertOutput(ExtismVal original, ExtismVal fromHostFunction) {
 
-        if (fromHostFunction.t == LibExtism.ExtismValType.I32.v) {
+        if (fromHostFunction.t != original.t) {
+            throw new ExtismException(String.format("Output type mismatch, got %d but expected %d", fromHostFunction.t, original.t));
+        } else if (fromHostFunction.t == LibExtism.ExtismValType.I32.v) {
             original.v.setType(Integer.TYPE);
             original.v.i32 = fromHostFunction.v.i32;
         } else if (fromHostFunction.t == LibExtism.ExtismValType.I64.v) {
