@@ -1,13 +1,15 @@
 package org.extism.sdk;
 
-import com.sun.jna.Pointer;
 import org.extism.sdk.manifest.Manifest;
 import org.extism.sdk.manifest.MemoryOptions;
 import org.extism.sdk.wasm.UrlWasmSource;
 import org.extism.sdk.wasm.WasmSourceResolver;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.extism.sdk.TestWasmSources.CODE;
@@ -48,9 +50,12 @@ public class PluginTests {
         var url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm";
         var config = Map.of("vowels", "aeiouyAEIOUY");
         var manifest = new Manifest(List.of(UrlWasmSource.fromUrl(url)), null, config);
-        var plugin = new Plugin(manifest, false, null);
-        var output = plugin.call("count_vowels", "Yellow, World!");
-        assertThat(output).isEqualTo("{\"count\":4,\"total\":4,\"vowels\":\"aeiouyAEIOUY\"}");
+
+        try (var plugin = new Plugin(manifest, false, null)) {
+            String output = plugin.call("count_vowels", "Yellow, World!");
+            assertThat(output).isEqualTo("{\"count\":4,\"total\":4,\"vowels\":\"aeiouyAEIOUY\"}");
+        }
+
     }
 
 //    @Test
@@ -105,12 +110,12 @@ public class PluginTests {
 //        var output = plugin.call("count_vowels", "Hello, World!");
 //    }
 
-     @Test
-     public void shouldInvokeFunctionFromByteArrayWasmSource() {
-         var manifest = new Manifest(CODE.byteArrayWasmSource());
-         var output = Extism.invokeFunction(manifest, "count_vowels", "Hello World");
-         assertThat(output).isEqualTo("{\"count\": 3}");
-     }
+    @Test
+    public void shouldInvokeFunctionFromByteArrayWasmSource() {
+        var manifest = new Manifest(CODE.byteArrayWasmSource());
+        var output = Extism.invokeFunction(manifest, "count_vowels", "Hello World");
+        assertThat(output).isEqualTo("{\"count\": 3}");
+    }
 
     @Test
     public void shouldFailToInvokeUnknownFunction() {
@@ -152,108 +157,103 @@ public class PluginTests {
 
     @Test
     public void shouldAllowInvokeHostFunctionFromPDK() {
-        var parametersTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
-        var resultsTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
 
         class MyUserData extends HostUserData {
-            private String data1;
-            private int data2;
+
+            private final String data1;
+
+            private final int data2;
 
             public MyUserData(String data1, int data2) {
-                super();
                 this.data1 = data1;
                 this.data2 = data2;
             }
         }
 
-        ExtismFunction helloWorldFunction = (ExtismFunction<MyUserData>) (plugin, params, returns, data) -> {
+        ExtismFunction<MyUserData> func = (plugin, params, returns, data) -> {
             System.out.println("Hello from Java Host Function!");
-            System.out.println(String.format("Input string received from plugin, %s", plugin.inputString(params[0])));
+            System.out.printf("Input string received from plugin, %s%n", plugin.inputString(params[0]));
 
-            int offs = plugin.alloc(4);
-            Pointer mem = plugin.memory();
-            mem.write(offs, "test".getBytes(), 0, 4);
-            returns[0].v.i64 = offs;
+            data.ifPresent(d -> {
+                System.out.printf("Host user data, %s, %d%n", d.data1, d.data2);
 
-            data.ifPresent(d -> System.out.println(String.format("Host user data, %s, %d", d.data1, d.data2)));
+                plugin.returnString(returns[0], d.data1.toUpperCase(Locale.US));
+            });
         };
 
-        HostFunction helloWorld = new HostFunction<>(
+        var parametersTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
+        var resultsTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
+
+        var hostFunc = new HostFunction<MyUserData>(
                 "hello_world",
                 parametersTypes,
                 resultsTypes,
-                helloWorldFunction,
+                func,
                 Optional.of(new MyUserData("test", 2))
         );
 
-        HostFunction[] functions = {helloWorld};
+        var functions = new HostFunction[]{hostFunc};
 
-        Manifest manifest = new Manifest(Arrays.asList(CODE.pathWasmFunctionsSource()));
+        Manifest manifest = new Manifest(CODE.pathWasmFunctionsSource());
         String functionName = "count_vowels";
 
         try (var plugin = new Plugin(manifest, true, functions)) {
             var output = plugin.call(functionName, "this is a test");
-            assertThat(output).isEqualTo("test");
+            assertThat(output).isEqualTo("TEST");
         }
     }
 
     @Test
     public void shouldAllowInvokeHostFunctionWithoutUserData() {
 
+        ExtismFunction<?> func = (plugin, params, returns, data) -> {
+            System.out.println("Hello from Java Host Function!");
+            System.out.printf("Input string received from plugin, %s%n", plugin.inputString(params[0]));
+
+            plugin.returnString(returns[0], "fromHostFunction");
+
+            assertThat(data.isEmpty()).isTrue();
+        };
+
         var parametersTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
         var resultsTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
 
-        ExtismFunction helloWorldFunction = (plugin, params, returns, data) -> {
-            System.out.println("Hello from Java Host Function!");
-            System.out.println(String.format("Input string received from plugin, %s", plugin.inputString(params[0])));
-
-            int offs = plugin.alloc(4);
-            Pointer mem = plugin.memory();
-            mem.write(offs, "test".getBytes(), 0, 4);
-            returns[0].v.i64 = offs;
-
-            assertThat(data.isEmpty());
-        };
-
-        HostFunction f = new HostFunction<>(
+        var hostFuncEnv = new HostFunction<>(
                 "hello_world",
                 parametersTypes,
                 resultsTypes,
-                helloWorldFunction,
+                func,
                 Optional.empty()
-        )
-                .withNamespace("env");
+        ).withNamespace("env");
 
-        HostFunction g = new HostFunction<>(
+        var hostFuncTest = new HostFunction<>(
                 "hello_world",
                 parametersTypes,
                 resultsTypes,
-                helloWorldFunction,
+                func,
                 Optional.empty()
-        )
-                .withNamespace("test");
+        ).withNamespace("test");
 
-        HostFunction[] functions = {f,g};
+        var functions = new HostFunction[]{hostFuncEnv, hostFuncTest};
 
-        Manifest manifest = new Manifest(Arrays.asList(CODE.pathWasmFunctionsSource()));
+        Manifest manifest = new Manifest(CODE.pathWasmFunctionsSource());
         String functionName = "count_vowels";
 
         try (var plugin = new Plugin(manifest, true, functions)) {
             var output = plugin.call(functionName, "this is a test");
-            assertThat(output).isEqualTo("test");
+            assertThat(output).isEqualTo("fromHostFunction");
         }
     }
 
 
     @Test
     public void shouldFailToInvokeUnknownHostFunction() {
-        Manifest manifest = new Manifest(Arrays.asList(CODE.pathWasmFunctionsSource()));
+        Manifest manifest = new Manifest(CODE.pathWasmFunctionsSource());
         String functionName = "count_vowels";
 
-        try {
-            var plugin = new Plugin(manifest, true, null);
+        try (var plugin = new Plugin(manifest, true, null)) {
             plugin.call(functionName, "this is a test");
-        }  catch (ExtismException e) {
+        } catch (ExtismException e) {
             assertThat(e.getMessage()).contains("unknown import: `env::hello_world` has not been defined");
         }
     }
