@@ -2,6 +2,7 @@ package org.extism.sdk;
 
 import com.sun.jna.Pointer;
 import org.extism.sdk.LibExtism.ExtismVal;
+import org.extism.sdk.LibExtism.ExtismValType;
 import org.extism.sdk.LibExtism.InternalExtismFunction;
 
 import java.util.Arrays;
@@ -13,17 +14,17 @@ public class HostFunction<T extends HostUserData> {
 
     private final String name;
 
-    private final LibExtism.ExtismValType[] params;
+    private final ExtismValType[] params;
 
-    private final LibExtism.ExtismValType[] returns;
+    private final ExtismValType[] returns;
 
     private final T userData;
 
-    public HostFunction(String name, LibExtism.ExtismValType[] params, LibExtism.ExtismValType[] returns, ExtismFunction<T> func) {
+    public HostFunction(String name, ExtismValType[] params, ExtismValType[] returns, ExtismFunction<T> func) {
         this(name, params, returns, func, null);
     }
 
-    public HostFunction(String name, LibExtism.ExtismValType[] params, LibExtism.ExtismValType[] returns, ExtismFunction<T> func, T userData) {
+    public HostFunction(String name, ExtismValType[] params, ExtismValType[] returns, ExtismFunction<T> func, T userData) {
 
         this.name = name;
         this.params = params;
@@ -35,15 +36,15 @@ public class HostFunction<T extends HostUserData> {
         InternalExtismFunction callback = createCallbackFunction(func, userData);
         Pointer userDataPointer = userData != null ? userData.getPointer() : null;
 
-        this.pointer = LibExtism.INSTANCE.extism_function_new(
-                name,
-                inputTypeValues,
-                inputTypeValues.length,
-                outputTypeValues,
-                outputTypeValues.length,
-                callback,
-                userDataPointer,
-                null
+        this.pointer = LibExtism.INSTANCE.extism_function_new( //
+                name, //
+                inputTypeValues, //
+                inputTypeValues.length, //
+                outputTypeValues, //
+                outputTypeValues.length, //
+                callback, //
+                userDataPointer, //
+                null //
         );
     }
 
@@ -57,29 +58,28 @@ public class HostFunction<T extends HostUserData> {
             func.invoke(currentPlugin, inputValues, outputValues, Optional.ofNullable(userData));
 
             for (ExtismVal output : outputValues) {
-                convertOutput(output, output);
+                coerceType(output);
             }
         };
     }
 
-    void convertOutput(ExtismVal original, ExtismVal fromHostFunction) {
+    void coerceType(ExtismVal value) {
 
-        if (fromHostFunction.t != original.t) {
-            throw new ExtismException(String.format("Output type mismatch, got %d but expected %d", fromHostFunction.t, original.t));
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.I32.v) {
-            original.v.setType(Integer.TYPE);
-            original.v.i32 = fromHostFunction.v.i32;
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.I64.v) {
-            original.v.setType(Long.TYPE);
-            original.v.i64 = fromHostFunction.v.i64;
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.F32.v) {
-            original.v.setType(Float.TYPE);
-            original.v.f32 = fromHostFunction.v.f32;
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.F64.v) {
-            original.v.setType(Double.TYPE);
-            original.v.f64 = fromHostFunction.v.f64;
-        } else {
-            throw new ExtismException(String.format("Unsupported return type: %s", original.t));
+        switch (value.t) {
+            case ExtismValType.I32_KEY:
+                value.v.setType(Integer.TYPE);
+                break;
+            case ExtismValType.I64_KEY:
+                value.v.setType(Long.TYPE);
+                break;
+            case ExtismValType.F32_KEY:
+                value.v.setType(Float.TYPE);
+                break;
+            case ExtismValType.F64_KEY:
+                value.v.setType(Double.TYPE);
+                break;
+            default:
+                throw new ExtismException(String.format("Unsupported return type: %s", value.t));
         }
     }
 
@@ -94,12 +94,12 @@ public class HostFunction<T extends HostUserData> {
         return this;
     }
 
-    public Optional<LibExtism.ExtismValType[]> params() {
-        return Optional.ofNullable(params).map(LibExtism.ExtismValType[]::clone);
+    public Optional<ExtismValType[]> params() {
+        return Optional.ofNullable(params).map(ExtismValType[]::clone);
     }
 
-    public Optional<LibExtism.ExtismValType[]> returns() {
-        return Optional.ofNullable(returns).map(LibExtism.ExtismValType[]::clone);
+    public Optional<ExtismValType[]> returns() {
+        return Optional.ofNullable(returns).map(ExtismValType[]::clone);
     }
 
     public Optional<T> userData() {
