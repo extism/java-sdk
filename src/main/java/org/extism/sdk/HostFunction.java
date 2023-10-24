@@ -1,82 +1,86 @@
 package org.extism.sdk;
 
 import com.sun.jna.Pointer;
-import com.sun.jna.PointerType;
+import org.extism.sdk.LibExtism.ExtismVal;
+import org.extism.sdk.LibExtism.ExtismValType;
+import org.extism.sdk.LibExtism.InternalExtismFunction;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 public class HostFunction<T extends HostUserData> {
 
-    private final LibExtism.InternalExtismFunction callback;
+    private final Pointer pointer;
 
-    public final Pointer pointer;
+    private final String name;
 
-    public final String name;
+    private final ExtismValType[] params;
 
-    public final LibExtism.ExtismValType[] params;
+    private final ExtismValType[] returns;
 
-    public final LibExtism.ExtismValType[] returns;
+    private final T userData;
 
-    public final Optional<T> userData;
+    public HostFunction(String name, ExtismValType[] params, ExtismValType[] returns, ExtismFunction<T> func) {
+        this(name, params, returns, func, null);
+    }
 
-    public HostFunction(String name, LibExtism.ExtismValType[] params, LibExtism.ExtismValType[] returns, ExtismFunction f, Optional<T> userData) {
+    public HostFunction(String name, ExtismValType[] params, ExtismValType[] returns, ExtismFunction<T> func, T userData) {
 
         this.name = name;
         this.params = params;
         this.returns = returns;
         this.userData = userData;
-        this.callback = (Pointer currentPlugin,
-                         LibExtism.ExtismVal inputs,
-                         int nInputs,
-                         LibExtism.ExtismVal outs,
-                         int nOutputs,
-                         Pointer data) -> {
 
-            LibExtism.ExtismVal[] outputs = (LibExtism.ExtismVal []) outs.toArray(nOutputs);
+        int[] inputTypeValues = Arrays.stream(this.params).mapToInt(r -> r.v).toArray();
+        int[] outputTypeValues = Arrays.stream(this.returns).mapToInt(r -> r.v).toArray();
+        InternalExtismFunction callback = createCallbackFunction(func, userData);
+        Pointer userDataPointer = userData != null ? userData.getPointer() : null;
 
-            f.invoke(
-                    new ExtismCurrentPlugin(currentPlugin),
-                    (LibExtism.ExtismVal []) inputs.toArray(nInputs),
-                    outputs,
-                    userData
-            );
-
-            for (LibExtism.ExtismVal output : outputs) {
-                convertOutput(output, output);
-            }
-        };
-
-        this.pointer = LibExtism.INSTANCE.extism_function_new(
-                this.name,
-                Arrays.stream(this.params).mapToInt(r -> r.v).toArray(),
-                this.params.length,
-                Arrays.stream(this.returns).mapToInt(r -> r.v).toArray(),
-                this.returns.length,
-                this.callback,
-                userData.map(PointerType::getPointer).orElse(null),
-                null
+        this.pointer = LibExtism.INSTANCE.extism_function_new( //
+                name, //
+                inputTypeValues, //
+                inputTypeValues.length, //
+                outputTypeValues, //
+                outputTypeValues.length, //
+                callback, //
+                userDataPointer, //
+                null //
         );
     }
 
-    void convertOutput(LibExtism.ExtismVal original, LibExtism.ExtismVal fromHostFunction) {
-        if (fromHostFunction.t != original.t)
-            throw new ExtismException(String.format("Output type mismatch, got %d but expected %d", fromHostFunction.t, original.t));
+    private InternalExtismFunction createCallbackFunction(ExtismFunction<T> func, T userData) {
+        return (Pointer pluginPointer, ExtismVal inputs, int nInputs, ExtismVal outputs, int nOutputs, Pointer data) -> {
 
-        if (fromHostFunction.t == LibExtism.ExtismValType.I32.v) {
-            original.v.setType(Integer.TYPE);
-            original.v.i32 = fromHostFunction.v.i32;
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.I64.v) {
-            original.v.setType(Long.TYPE);
-            original.v.i64 = fromHostFunction.v.i64;
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.F32.v) {
-            original.v.setType(Float.TYPE);
-            original.v.f32 = fromHostFunction.v.f32;
-        } else if (fromHostFunction.t == LibExtism.ExtismValType.F64.v) {
-            original.v.setType(Double.TYPE);
-            original.v.f64 = fromHostFunction.v.f64;
-        } else
-            throw new ExtismException(String.format("Unsupported return type: %s", original.t));
+            var outputValues = (ExtismVal[]) outputs.toArray(nOutputs);
+            var inputValues = (ExtismVal[]) inputs.toArray(nInputs);
+            var currentPlugin = new ExtismCurrentPlugin(pluginPointer);
+
+            func.invoke(currentPlugin, inputValues, outputValues, Optional.ofNullable(userData));
+
+            for (ExtismVal output : outputValues) {
+                coerceType(output);
+            }
+        };
+    }
+
+    void coerceType(ExtismVal value) {
+
+        switch (value.t) {
+            case ExtismValType.I32_KEY:
+                value.v.setType(Integer.TYPE);
+                break;
+            case ExtismValType.I64_KEY:
+                value.v.setType(Long.TYPE);
+                break;
+            case ExtismValType.F32_KEY:
+                value.v.setType(Float.TYPE);
+                break;
+            case ExtismValType.F64_KEY:
+                value.v.setType(Double.TYPE);
+                break;
+            default:
+                throw new ExtismException(String.format("Unsupported return type: %s", value.t));
+        }
     }
 
     public void setNamespace(String name) {
@@ -85,8 +89,28 @@ public class HostFunction<T extends HostUserData> {
         }
     }
 
-    HostFunction withNamespace(String name) {
+    public HostFunction<T> withNamespace(String name) {
         this.setNamespace(name);
         return this;
+    }
+
+    public Optional<ExtismValType[]> params() {
+        return Optional.ofNullable(params).map(ExtismValType[]::clone);
+    }
+
+    public Optional<ExtismValType[]> returns() {
+        return Optional.ofNullable(returns).map(ExtismValType[]::clone);
+    }
+
+    public Optional<T> userData() {
+        return Optional.ofNullable(userData);
+    }
+
+    public String name() {
+        return name;
+    }
+
+    /* package scoped */ Pointer getPointer() {
+        return pointer;
     }
 }

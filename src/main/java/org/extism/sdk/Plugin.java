@@ -22,23 +22,27 @@ public class Plugin implements AutoCloseable {
      * @param functions     The Host functions for th eplugin
      * @param withWASI      Set to true to enable WASI
      */
-    public Plugin(byte[] manifestBytes, boolean withWASI, HostFunction[] functions) {
+    public Plugin(byte[] manifestBytes, boolean withWASI, HostFunction<?>[] functions) {
 
         Objects.requireNonNull(manifestBytes, "manifestBytes");
 
-        Pointer[] ptrArr = new Pointer[functions == null ? 0 : functions.length];
-
-        if (functions != null)
+        int funcCount = functions == null ? 0 : functions.length;
+        Pointer[] ptrArr = new Pointer[funcCount];
+        if (funcCount > 0) {
             for (int i = 0; i < functions.length; i++) {
-               ptrArr[i] = functions[i].pointer;
+               ptrArr[i] = functions[i].getPointer();
             }
+        }
 
         Pointer[] errormsg = new Pointer[1];
-        Pointer p = LibExtism.INSTANCE.extism_plugin_new(manifestBytes, manifestBytes.length,
+        Pointer p = LibExtism.INSTANCE.extism_plugin_new(
+                manifestBytes,
+                manifestBytes.length,
                 ptrArr,
-                functions == null ? 0 : functions.length,
+                funcCount,
                 withWASI,
                 errormsg);
+
         if (p == null) {
             int errlen = LibExtism.INSTANCE.strlen(errormsg[0]);
             byte[] msg = new byte[errlen];
@@ -50,8 +54,16 @@ public class Plugin implements AutoCloseable {
         this.pluginPointer = p;
     }
 
-    public Plugin(Manifest manifest, boolean withWASI, HostFunction[] functions) {
+    public Plugin(Manifest manifest, boolean withWASI, HostFunction<?>[] functions) {
         this(serialize(manifest), withWASI, functions);
+    }
+
+    public Plugin(Manifest manifest, boolean withWASI) {
+        this(manifest, withWASI, null);
+    }
+
+    public Plugin(Manifest manifest) {
+        this(manifest, false);
     }
 
 
@@ -120,8 +132,8 @@ public class Plugin implements AutoCloseable {
     /**
      * Update plugin config values, this will merge with the existing values.
      *
-     * @param json
-     * @return
+     * @param json json string of the config
+     * @return true if the config could be applied
      */
     public boolean updateConfig(String json) {
         Objects.requireNonNull(json, "json");
@@ -131,7 +143,7 @@ public class Plugin implements AutoCloseable {
     /**
      * Update plugin config values, this will merge with the existing values.
      *
-     * @param jsonBytes
+     * @param jsonBytes bytes of the config json
      * @return {@literal true} if update was successful
      */
     public boolean updateConfig(byte[] jsonBytes) {
@@ -151,7 +163,6 @@ public class Plugin implements AutoCloseable {
      * Return a new `CancelHandle`, which can be used to cancel a running Plugin
      */
     public CancelHandle cancelHandle() {
-        Pointer handle = LibExtism.INSTANCE.extism_plugin_cancel_handle(this.pluginPointer);
-        return new CancelHandle(handle);
+        return new CancelHandle(LibExtism.INSTANCE.extism_plugin_cancel_handle(this.pluginPointer));
     }
 }

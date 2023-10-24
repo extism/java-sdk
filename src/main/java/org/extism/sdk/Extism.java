@@ -1,7 +1,9 @@
 package org.extism.sdk;
 
 import org.extism.sdk.manifest.Manifest;
+import org.extism.sdk.wasm.WasmSourceResolver;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -10,25 +12,38 @@ import java.util.Objects;
  */
 public class Extism {
 
+    private static final WasmSourceResolver DEFAULT_RESOLVER = new WasmSourceResolver();
+
     /**
-     * Configure a log file with the given {@link Path} and configure the given {@link LogLevel}.
-     *
+     * Creates a {@link Manifest} from the given {@code path}.
      * @param path
-     * @param level
-     *
-     * @deprecated will be replaced with better logging API.
+     * @return
      */
-    @Deprecated(forRemoval = true)
-    public static void setLogFile(Path path, LogLevel level) {
-
+    public static Manifest manifestFromPath(Path path) {
         Objects.requireNonNull(path, "path");
-        Objects.requireNonNull(level, "level");
+        return new Manifest(DEFAULT_RESOLVER.resolve(path));
+    }
 
-        var result = LibExtism.INSTANCE.extism_log_file(path.toString(), level.getLevel());
-        if (!result) {
-            var error = String.format("Could not set extism logger to %s with level %s", path, level);
-            throw new ExtismException(error);
-        }
+    /**
+     * Creates a {@link Manifest} from the given {@code name} and {@code bytes}.
+     * @param name
+     * @param bytes
+     * @return
+     */
+    public static Manifest manifestFromBytes(String name, byte[] bytes) {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(bytes, "bytes");
+        return new Manifest(DEFAULT_RESOLVER.resolve(name, bytes));
+    }
+
+    /**
+     * Creates a {@link Manifest} from the given {@code url}.
+     * @param url
+     * @return
+     */
+    public static Manifest manifestFromUrl(String url) {
+        Objects.requireNonNull(url, "url");
+        return new Manifest(DEFAULT_RESOLVER.resolve(URI.create(url)));
     }
 
     /**
@@ -44,32 +59,6 @@ public class Extism {
     public static String invokeFunction(Manifest manifest, String function, String input) throws ExtismException {
         try (var plugin = new Plugin(manifest, false, null)) {
             return plugin.call(function, input);
-        }
-    }
-
-    /**
-     * Error levels for the Extism logging facility.
-     *
-     * @see Extism#setLogFile(Path, LogLevel)
-     */
-    public enum LogLevel {
-
-        INFO("info"), //
-
-        DEBUG("debug"), //
-
-        WARN("warn"), //
-
-        TRACE("trace");
-
-        private final String level;
-
-        LogLevel(String level) {
-            this.level = level;
-        }
-
-        public String getLevel() {
-            return level;
         }
     }
 }
