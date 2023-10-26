@@ -195,8 +195,6 @@ public class PluginTests {
             var output = plugin.call(functionName, "this is a test");
             assertThat(output).isEqualTo("test");
         }
-
-        helloWorld.free();
     }
 
     @Test
@@ -244,9 +242,6 @@ public class PluginTests {
             var output = plugin.call(functionName, "this is a test");
             assertThat(output).isEqualTo("test");
         }
-
-        f.free();
-        g.free();
     }
 
 
