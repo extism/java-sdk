@@ -62,6 +62,8 @@ public interface LibExtism extends Library {
                                 Pointer userData,
                                 Pointer freeUserData);
 
+    void extism_function_free(Pointer function);
+
     /**
      * Get the length of an allocated block
      * NOTE: this should only be called from host functions.
