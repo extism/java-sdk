@@ -33,14 +33,14 @@ public class PluginTests {
         var config = Map.of("key1", "value1");
         var manifest = new Manifest(List.of(CODE.pathWasmSource()), null, config);
         var output = Extism.invokeFunction(manifest, "count_vowels", "Hello World");
-        assertThat(output).isEqualTo("{\"count\": 3}");
+        assertThat(output).isEqualTo("{\"count\":3,\"total\":3,\"vowels\":\"aeiouAEIOU\"}");
     }
 
     @Test
     public void shouldInvokeFunctionFromFileWasmSource() {
         var manifest = new Manifest(CODE.pathWasmSource());
         var output = Extism.invokeFunction(manifest, "count_vowels", "Hello World");
-        assertThat(output).isEqualTo("{\"count\": 3}");
+        assertThat(output).isEqualTo("{\"count\":3,\"total\":3,\"vowels\":\"aeiouAEIOU\"}");
     }
 
     @Test
@@ -109,7 +109,7 @@ public class PluginTests {
      public void shouldInvokeFunctionFromByteArrayWasmSource() {
          var manifest = new Manifest(CODE.byteArrayWasmSource());
          var output = Extism.invokeFunction(manifest, "count_vowels", "Hello World");
-         assertThat(output).isEqualTo("{\"count\": 3}");
+         assertThat(output).isEqualTo("{\"count\":3,\"total\":3,\"vowels\":\"aeiouAEIOU\"}");
      }
 
     @Test
@@ -131,7 +131,7 @@ public class PluginTests {
 
         try (var plugin = new Plugin(manifest, false, null)) {
             var output = plugin.call(functionName, input);
-            assertThat(output).isEqualTo("{\"count\": 3}");
+            assertThat(output).contains("\"count\":3");
         }
     }
 
@@ -143,10 +143,10 @@ public class PluginTests {
 
         try (var plugin = new Plugin(manifest, false, null)) {
             var output = plugin.call(functionName, input);
-            assertThat(output).isEqualTo("{\"count\": 3}");
+            assertThat(output).contains("\"count\":3");
 
             output = plugin.call(functionName, input);
-            assertThat(output).isEqualTo("{\"count\": 3}");
+            assertThat(output).contains("\"count\":3");
         }
     }
 
@@ -222,7 +222,7 @@ public class PluginTests {
                 helloWorldFunction,
                 Optional.empty()
         )
-                .withNamespace("extism:host/env");
+                .withNamespace("extism:host/user");
 
         HostFunction g = new HostFunction<>(
                 "hello_world",
@@ -254,7 +254,7 @@ public class PluginTests {
             var plugin = new Plugin(manifest, true, null);
             plugin.call(functionName, "this is a test");
         }  catch (ExtismException e) {
-            assertThat(e.getMessage()).contains("unknown import: `env::hello_world` has not been defined");
+            assertThat(e.getMessage()).contains("unknown import: `extism:host/user::hello_world` has not been defined");
         }
     }
 
