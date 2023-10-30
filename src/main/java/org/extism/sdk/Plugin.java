@@ -17,6 +17,8 @@ public class Plugin implements AutoCloseable {
      */
     private final Pointer pluginPointer;
 
+    private final HostFunction[] functions;
+
     /**
      * @param manifestBytes The manifest for the plugin
      * @param functions     The Host functions for th eplugin
@@ -40,6 +42,10 @@ public class Plugin implements AutoCloseable {
                 withWASI,
                 errormsg);
         if (p == null) {
+            if (functions != null)
+                for (int i = 0; i < functions.length; i++) {
+                   LibExtism.INSTANCE.extism_function_free(functions[i].pointer);
+                }
             int errlen = LibExtism.INSTANCE.strlen(errormsg[0]);
             byte[] msg = new byte[errlen];
             errormsg[0].read(0, msg, 0, errlen);
@@ -47,6 +53,7 @@ public class Plugin implements AutoCloseable {
             throw new ExtismException(new String(msg));
         }
 
+        this.functions = functions;
         this.pluginPointer = p;
     }
 
@@ -114,6 +121,11 @@ public class Plugin implements AutoCloseable {
      * Frees a plugin from memory
      */
     public void free() {
+        if (this.functions != null){
+            for (int i = 0; i < this.functions.length; i++) {
+                this.functions[i].free();
+            }
+        }
         LibExtism.INSTANCE.extism_plugin_free(this.pluginPointer);
     }
 
