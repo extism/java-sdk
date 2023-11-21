@@ -35,11 +35,11 @@ public class HostFunction<T extends HostUserData> {
                          int nOutputs,
                          Pointer data) -> {
 
-            LibExtism.ExtismVal[] outputs = (LibExtism.ExtismVal []) outs.toArray(nOutputs);
+            LibExtism.ExtismVal[] outputs = (LibExtism.ExtismVal[]) outs.toArray(nOutputs);
 
             f.invoke(
                     new ExtismCurrentPlugin(currentPlugin),
-                    (LibExtism.ExtismVal []) inputs.toArray(nInputs),
+                    (LibExtism.ExtismVal[]) inputs.toArray(nInputs),
                     outputs,
                     userData
             );
@@ -70,7 +70,12 @@ public class HostFunction<T extends HostUserData> {
             original.v.i32 = fromHostFunction.v.i32;
         } else if (fromHostFunction.t == LibExtism.ExtismValType.I64.v) {
             original.v.setType(Long.TYPE);
-            original.v.i64 = fromHostFunction.v.i64;
+            // PTR is an alias for I64
+            if (fromHostFunction.v.i64 == 0 && fromHostFunction.v.ptr > 0) {
+                original.v.i64 = fromHostFunction.v.ptr;
+            } else {
+                original.v.i64 = fromHostFunction.v.i64;
+            }
         } else if (fromHostFunction.t == LibExtism.ExtismValType.F32.v) {
             original.v.setType(Float.TYPE);
             original.v.f32 = fromHostFunction.v.f32;
@@ -93,7 +98,7 @@ public class HostFunction<T extends HostUserData> {
     }
 
     public void free() {
-        if (!this.freed){
+        if (!this.freed) {
             LibExtism.INSTANCE.extism_function_free(this.pointer);
             this.freed = true;
         }

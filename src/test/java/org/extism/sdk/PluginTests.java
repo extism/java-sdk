@@ -198,6 +198,53 @@ public class PluginTests {
     }
 
     @Test
+    public void shouldAllowInvokeHostFunctionFromPDKUsingPTR() {
+        var parametersTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.PTR};
+        var resultsTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.PTR};
+
+        class MyUserData extends HostUserData {
+            private String data1;
+            private int data2;
+
+            public MyUserData(String data1, int data2) {
+                super();
+                this.data1 = data1;
+                this.data2 = data2;
+            }
+        }
+
+        ExtismFunction helloWorldFunction = (ExtismFunction<MyUserData>) (plugin, params, returns, data) -> {
+            System.out.println("Hello from Java Host Function!");
+            System.out.println(String.format("Input string received from plugin, %s", plugin.inputString(params[0])));
+
+            int offs = plugin.alloc(4);
+            Pointer mem = plugin.memory();
+            mem.write(offs, "test".getBytes(), 0, 4);
+            returns[0].v.ptr = offs;
+
+            data.ifPresent(d -> System.out.println(String.format("Host user data, %s, %d", d.data1, d.data2)));
+        };
+
+        HostFunction helloWorld = new HostFunction<>(
+                "hello_world",
+                parametersTypes,
+                resultsTypes,
+                helloWorldFunction,
+                Optional.of(new MyUserData("test", 2))
+        );
+
+        HostFunction[] functions = {helloWorld};
+
+        Manifest manifest = new Manifest(Arrays.asList(CODE.pathWasmFunctionsSource()));
+        String functionName = "count_vowels";
+
+        try (var plugin = new Plugin(manifest, true, functions)) {
+            var output = plugin.call(functionName, "this is a test");
+            assertThat(output).isEqualTo("test");
+        }
+    }
+
+    @Test
     public void shouldAllowInvokeHostFunctionWithoutUserData() {
 
         var parametersTypes = new LibExtism.ExtismValType[]{LibExtism.ExtismValType.I64};
