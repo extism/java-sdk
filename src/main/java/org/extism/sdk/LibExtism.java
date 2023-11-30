@@ -29,10 +29,10 @@ public interface LibExtism extends Library {
         public int t;
         public ExtismValUnion v;
     }
-
     class ExtismValUnion extends Union {
         public int i32;
         public long i64;
+        public long ptr;
         public float f32;
         public double f64;
     }
@@ -40,6 +40,8 @@ public interface LibExtism extends Library {
     enum ExtismValType {
         I32(0),
         I64(1),
+        // PTR is an alias for I64
+        PTR(1),
         F32(2),
         F64(3),
         V128(4),
