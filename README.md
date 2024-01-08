@@ -13,8 +13,6 @@ Java SDK for the [Extism](https://extism.org/) WebAssembly Plugin-System.
 
 For this library, you first need to install the Extism Runtime. You can [download the shared object directly from a release](https://github.com/extism/extism/releases) or use the [Extism CLI](https://github.com/extism/cli) to install it:
 
-> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`.
-
 ```bash
 sudo extism lib install latest
 
@@ -34,7 +32,7 @@ To use the Extism java-sdk with maven you need to add the following dependency t
 <dependency>
     <groupId>org.extism.sdk</groupId>
     <artifactId>extism</artifactId>
-    <version>1.0.0-rc1</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -43,7 +41,7 @@ To use the Extism java-sdk with maven you need to add the following dependency t
 To use the Extism java-sdk with maven you need to add the following dependency to your `build.gradle` file:
 
 ```
-implementation 'org.extism.sdk:extism:1.0.0-rc1'
+implementation 'org.extism.sdk:extism:1.0.0'
 ```
 
 ## Getting Started

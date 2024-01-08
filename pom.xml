@@ -5,7 +5,7 @@
   <groupId>org.extism.sdk</groupId>
   <artifactId>extism</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0-rc1</version>
+  <version>1.0.0</version>
   <name>extism</name>
   <url>https://github.com/extism/extism</url>
   <description>Java-SDK for Extism to use webassembly from Java</description>
