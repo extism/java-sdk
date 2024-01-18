@@ -81,7 +81,7 @@ public class Plugin implements AutoCloseable {
 
         int inputDataLength = inputData == null ? 0 : inputData.length;
         int exitCode = LibExtism.INSTANCE.extism_plugin_call(this.pluginPointer, functionName, inputData, inputDataLength);
-        if (exitCode == -1) {
+        if (exitCode != 0) {
             String error = this.error();
             throw new ExtismException(error);
         }
@@ -114,7 +114,11 @@ public class Plugin implements AutoCloseable {
      * @return the error message
      */
     protected String error() {
-        return LibExtism.INSTANCE.extism_plugin_error(this.pluginPointer);
+        String error = LibExtism.INSTANCE.extism_plugin_error(this.pluginPointer);
+        if (error == null){
+            return new String("Unknown error encountered when running Extism plugin function");
+        }
+        return error;
     }
 
     /**

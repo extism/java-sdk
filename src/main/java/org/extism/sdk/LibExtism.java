@@ -116,7 +116,7 @@ public interface LibExtism extends Library {
      * @param nFunctions     the number of host functions
      * @param withWASI       enables/disables WASI
      * @param errmsg         get the error message if the return value is null
-     * @return id of the plugin or {@literal -1} in case of error
+     * @return pointer to the plugin, or null in case of error
      */
     Pointer extism_plugin_new(byte[] wasm, long wasmSize, Pointer[] functions, int nFunctions, boolean withWASI, Pointer[] errmsg);
 
@@ -138,7 +138,7 @@ public interface LibExtism extends Library {
      * @param function_name  is the function to call
      * @param data           is the data input data
      * @param dataLength     is the data input data length
-     * @return the result code of the plugin call. {@literal -1} in case of error, {@literal 0} otherwise.
+     * @return the result code of the plugin call. non-zero in case of error, {@literal 0} otherwise.
      */
     int extism_plugin_call(Pointer pluginPointer, String function_name, byte[] data, int dataLength);
 
