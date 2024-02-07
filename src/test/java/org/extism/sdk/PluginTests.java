@@ -21,7 +21,7 @@ public class PluginTests {
 
     @Test
     public void shouldInvokeFunctionWithMemoryOptions() {
-        var manifest = new Manifest(List.of(CODE.pathWasmSource()), new MemoryOptions(0));
+        var manifest = new Manifest(List.of(CODE.pathWasmSource()), new MemoryOptions(0, 0));
         assertThrows(ExtismException.class, () -> {
             Extism.invokeFunction(manifest, "count_vowels", "Hello World");
         });

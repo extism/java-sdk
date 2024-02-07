@@ -32,13 +32,14 @@ public class ManifestTests {
     @Test
     public void shouldSerializeManifestWithWasmSourceAndMemoryOptionsToJson() {
 
-        var manifest = new Manifest(List.of(CODE.pathWasmSource()), new MemoryOptions(4));
+        var manifest = new Manifest(List.of(CODE.pathWasmSource()), new MemoryOptions(4, 1024 * 1024 * 10));
         var json = JsonSerde.toJson(manifest);
         assertNotNull(json);
 
         assertJson(json).at("/wasm").isArray();
         assertJson(json).at("/wasm").hasSize(1);
-        assertJson(json).at("/memory/max").isEqualTo(4);
+        assertJson(json).at("/memory/max_pages").isEqualTo(4);
+        assertJson(json).at("/memory/max_http_response_bytes").isEqualTo(1024 * 1024 * 10);
     }
 
     @Test
