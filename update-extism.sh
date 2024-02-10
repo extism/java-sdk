@@ -6,17 +6,16 @@ rm -rf src/main/resources
 mkdir -p ./src/main/resources/natives/
 
 create_librairies_folders() {
-  declare -a archs=("darwin-aarch64" "darwin-x86-64" "linux-aarch64" "linux-x86-64" "win32-x86-64")
-  for i in "${archs[@]}"
-  do
+  archs=("darwin-aarch64" "darwin-x86-64" "linux-aarch64" "linux-x86-64" "win32-x86-64")
+  for i in ${archs[@]}; do
      mkdir ./src/main/resources/$i
   done
 }
 
 fetch_and_unzip_library() {
-  local ARCH="$1"
-  local LIBRARY_FOLDER="$2"
-  local FILENAME="$3"
+  ARCH="$1"
+  LIBRARY_FOLDER="$2"
+  FILENAME="$3"
 
   curl -L -o "./src/main/resources/natives/${ARCH}-${EXTISM_VERSION}.tar.gz" "https://github.com/extism/extism/releases/download/${EXTISM_VERSION}/${ARCH}-${EXTISM_VERSION}.tar.gz"
   tar -xvf "./src/main/resources/natives/${ARCH}-${EXTISM_VERSION}.tar.gz" --directory ./src/main/resources/natives/
