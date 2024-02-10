@@ -2,7 +2,7 @@ EXTISM_VERSION=$(curl https://api.github.com/repos/extism/extism/releases/latest
 
 echo "latest extism version is: ${EXTISM_VERSION}"
 
-rm -rf src/main/resources
+rm -rf src/main/resources/*
 mkdir -p ./src/main/resources/natives/
 
 create_librairies_folders() {
