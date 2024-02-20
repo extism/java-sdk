@@ -1,3 +1,6 @@
+#!/bin/sh
+set -e
+
 EXTISM_VERSION=$(curl https://api.github.com/repos/extism/extism/releases/latest | jq -r '.name')
 
 echo "latest extism version is: ${EXTISM_VERSION}"
