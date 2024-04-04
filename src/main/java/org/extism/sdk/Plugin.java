@@ -42,15 +42,14 @@ public class Plugin implements AutoCloseable {
                 withWASI,
                 errormsg);
         if (p == null) {
-            if (functions != null)
+            if (functions != null) {
                 for (int i = 0; i < functions.length; i++) {
-                   LibExtism.INSTANCE.extism_function_free(functions[i].pointer);
+                    LibExtism.INSTANCE.extism_function_free(functions[i].pointer);
                 }
-            int errlen = LibExtism.INSTANCE.strlen(errormsg[0]);
-            byte[] msg = new byte[errlen];
-            errormsg[0].read(0, msg, 0, errlen);
+            }
+            String msg = errormsg[0].getString(0);
             LibExtism.INSTANCE.extism_plugin_new_error_free(errormsg[0]);
-            throw new ExtismException(new String(msg));
+            throw new ExtismException(msg);
         }
 
         this.functions = functions;
