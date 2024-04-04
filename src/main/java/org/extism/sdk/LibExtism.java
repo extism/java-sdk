@@ -169,5 +169,4 @@ public interface LibExtism extends Library {
     Pointer extism_plugin_cancel_handle(Pointer pluginPointer);
     boolean extism_plugin_cancel(Pointer cancelHandle);
     void extism_function_set_namespace(Pointer p, String name);
-    int strlen(Pointer s);
 }
