@@ -66,6 +66,7 @@ public interface LibExtism extends Library {
 
     void extism_function_free(Pointer function);
 
+
     /**
      * Get the length of an allocated block
      * NOTE: this should only be called from host functions.
@@ -119,6 +120,8 @@ public interface LibExtism extends Library {
      * @return pointer to the plugin, or null in case of error
      */
     Pointer extism_plugin_new(byte[] wasm, long wasmSize, Pointer[] functions, int nFunctions, boolean withWASI, Pointer[] errmsg);
+    Pointer extism_plugin_new_with_fuel_limit(byte[] wasm, long wasmSize, Pointer[] functions, int nFunctions, boolean withWASI, long fuelLimit, Pointer[] errmsg);
+
 
     /**
      * Free error message from `extism_plugin_new`
