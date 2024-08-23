@@ -56,10 +56,48 @@ public class Plugin implements AutoCloseable {
         this.pluginPointer = p;
     }
 
+    
+    public Plugin(byte[] manifestBytes, boolean withWASI, HostFunction[] functions, long fuelLimit) {
+
+        Objects.requireNonNull(manifestBytes, "manifestBytes");
+
+        Pointer[] ptrArr = new Pointer[functions == null ? 0 : functions.length];
+
+        if (functions != null)
+            for (int i = 0; i < functions.length; i++) {
+               ptrArr[i] = functions[i].pointer;
+            }
+
+        Pointer[] errormsg = new Pointer[1];
+        Pointer p = LibExtism.INSTANCE.extism_plugin_new_with_fuel_limit(manifestBytes, manifestBytes.length,
+                ptrArr,
+                functions == null ? 0 : functions.length,
+                withWASI,
+                fuelLimit,
+                errormsg);
+        if (p == null) {
+            if (functions != null) {
+                for (int i = 0; i < functions.length; i++) {
+                    LibExtism.INSTANCE.extism_function_free(functions[i].pointer);
+                }
+            }
+            String msg = errormsg[0].getString(0);
+            LibExtism.INSTANCE.extism_plugin_new_error_free(errormsg[0]);
+            throw new ExtismException(msg);
+        }
+
+        this.functions = functions;
+        this.pluginPointer = p;
+    }
+
     public Plugin(Manifest manifest, boolean withWASI, HostFunction[] functions) {
         this(serialize(manifest), withWASI, functions);
     }
 
+    
+    public Plugin(Manifest manifest, boolean withWASI, HostFunction[] functions, long fuelLimit) {
+        this(serialize(manifest), withWASI, functions, fuelLimit);
+    }
 
     private static byte[] serialize(Manifest manifest) {
         Objects.requireNonNull(manifest, "manifest");
