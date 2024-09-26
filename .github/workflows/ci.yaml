@@ -20,6 +20,8 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v3
       - uses: ./.github/actions/libextism
+      - name: fetch-extism-librairies
+        run: sh ./update-extism.sh
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
