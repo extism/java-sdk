@@ -23,6 +23,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install libextism
+        uses: ./.github/actions/libextism
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -30,49 +33,48 @@ jobs:
           distribution: 'temurin'
           server-id: ossrh
           server-username: MAVEN_USERNAME
-          server-password: MAVEN_CENTRAL_TOKEN
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - id: install-secret-key
         name: Install gpg secret key
         run: |
-          cat <(echo -e "${{ secrets.GPG_PRIVATE_KEY }}") | gpg --batch --import
+          cat <(echo -e "${{ secrets.JRELEASER_GPG_SECRET_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
 
       - name: Compile
-        run: mvn --batch-mode verify
+        run: mvn --batch-mode --no-transfer-progress verify
 
       - name: Setup Git
         run: |
           git config user.name "Extism BOT"
-          git config user.email "extism@dylibso.com"
+          git config user.email "oss@extism.org"
 
       - name: Set the version
         run: |
-          mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${{ github.event.inputs.release-version }}
-          ./scripts/update-docs-version ${{ github.event.inputs.release-version }}
-          git add .
-          git commit -m "Release version update ${{ github.event.inputs.release-version }}"
-          git push
-          git tag ${{ github.event.inputs.release-version }}
-          git push origin ${{ github.event.inputs.release-version }}
+          mvn --batch-mode --no-transfer-progress versions:set -DgenerateBackupPoms=false -DnewVersion=${{ github.event.inputs.release-version }}
         env:
-          GITHUB_TOKEN: ${{secrets.GH_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Release to Maven Central
         run: |
-          mvn --batch-mode clean verify deploy -Drelease -DskipTests=true -X
+          mvn --batch-mode --no-transfer-progress -Prelease clean verify deploy -X
         env:
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_USERNAME: ${{ secrets.JRELEASER_NEXUS2_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.JRELEASER_NEXUS2_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
 
-      - name: Back to Snapshot
+      - name: Commit tag, back to Snapshot and Push
+        if: ${{ ! endsWith(github.event.inputs.release-version, '-SNAPSHOT') }}
         run: |
-          mvn versions:set -DgenerateBackupPoms=false -DnewVersion=999-SNAPSHOT
+          git add .
+          git commit -m "Release version update ${{ github.event.inputs.release-version }}"
+          git tag ${{ github.event.inputs.release-version }}
+          mvn --batch-mode --no-transfer-progress versions:set -DgenerateBackupPoms=false -DnewVersion=999-SNAPSHOT
           git add .
           git commit -m "Snapshot version update"
           git push
+          git push origin ${{ github.event.inputs.release-version }}
         env:
-          GITHUB_TOKEN: ${{secrets.GH_TOKEN}}
+          GITHUB_TOKEN:  ${{ github.token }}
