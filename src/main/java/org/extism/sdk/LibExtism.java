@@ -120,7 +120,13 @@ public interface LibExtism extends Library {
      * @return pointer to the plugin, or null in case of error
      */
     Pointer extism_plugin_new(byte[] wasm, long wasmSize, Pointer[] functions, int nFunctions, boolean withWASI, Pointer[] errmsg);
+    Pointer extism_plugin_new(Pointer compiledPluginPointer, Pointer[] errmsg);
     Pointer extism_plugin_new_with_fuel_limit(byte[] wasm, long wasmSize, Pointer[] functions, int nFunctions, boolean withWASI, long fuelLimit, Pointer[] errmsg);
+
+    /** 
+     * Create a new compiled plugin.
+     */
+    Pointer extism_compiled_plugin_new(byte[] wasm, long wasmSize, Pointer[] functions, int nFunctions, boolean withWASI, Pointer[] errmsg);
 
 
     /**
@@ -135,7 +141,7 @@ public interface LibExtism extends Library {
 
 
     /**
-     * Calls a function from the @{@link Plugin} at the given {@code pluginIndex}.
+     * Calls a function from a @{@link Plugin}.
      *
      * @param pluginPointer
      * @param function_name  is the function to call
@@ -144,6 +150,19 @@ public interface LibExtism extends Library {
      * @return the result code of the plugin call. non-zero in case of error, {@literal 0} otherwise.
      */
     int extism_plugin_call(Pointer pluginPointer, String function_name, byte[] data, int dataLength);
+
+    
+    /**
+     * Calls a function from a @{@link Plugin} with the given host context.
+     *
+     * @param pluginPointer
+     * @param function_name  is the function to call
+     * @param data           is the data input data
+     * @param dataLength     is the data input data length
+     * @param hostContext    is the host context value
+     * @return the result code of the plugin call. non-zero in case of error, {@literal 0} otherwise.
+     */
+    int extism_plugin_call_with_host_context(Pointer pluginPointer, String function_name, byte[] data, int dataLength, Pointer hostContext);
 
     /**
      * Returns 
@@ -158,9 +177,14 @@ public interface LibExtism extends Library {
     Pointer extism_plugin_output_data(Pointer pluginPointer);
 
     /**
-     * Remove a plugin from the
+     * Free a plugin
      */
     void extism_plugin_free(Pointer pluginPointer);
+
+    /**
+     * Free a compiled plugin
+     */
+    void extism_compiled_plugin_free(Pointer compiledPluginPointer);
 
     /**
      * Update plugin config values, this
